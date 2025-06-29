@@ -26,27 +26,25 @@ import requests
 from PIL import Image
 import io
 
-import requests
-from PIL import Image
-import io
-
 def fetch_satellite_image(coords):
     lat, lon = coords
 
-    # Replace with your actual Google Maps API key
-    api_key = "YOUR_GOOGLE_MAPS_API_KEY"
-    zoom = 17  # You can adjust this (1 = world, 20 = building)
-    size = "600x600"  # Max size for free tier is 640x640
-    maptype = "satellite"
+    # Replace with your actual Mapbox token (free tier available)
+    access_token = "YOUR_MAPBOX_ACCESS_TOKEN"
+    zoom = 17
+    width = 600
+    height = 600
 
     url = (
-        f"https://maps.googleapis.com/maps/api/staticmap?"
-        f"center={lat},{lon}&zoom={zoom}&size={size}&maptype={maptype}&key={api_key}"
+        f"https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/"
+        f"{lon},{lat},{zoom}/{width}x{height}?access_token={access_token}"
     )
 
     response = requests.get(url)
 
     if response.status_code != 200:
+        print("URL used:", url)
+        print("Response content:", response.text[:200])
         raise Exception(f"Failed to fetch image: status code {response.status_code}")
 
     content_type = response.headers.get('Content-Type', '')
@@ -55,6 +53,7 @@ def fetch_satellite_image(coords):
 
     image = Image.open(io.BytesIO(response.content))
     return image
+
 
 
 def generate_recommendations(predicted_checkins):
