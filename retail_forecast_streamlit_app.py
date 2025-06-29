@@ -1,130 +1,171 @@
-# Filename: interactive_app.py
-# AI-Driven Retail Forecasting with Interactive Input (Streamlit - Production Build)
+# Filename: multimodal_forecasting_app.py
+# Full AI-Powered Retail Forecast System with Satellite + Mobility + Social Media Integration + Improvement Recommendations
 
+import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
+import math
+import requests
+import torch
+import torchvision.transforms as transforms
+from PIL import Image
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
 from sklearn.model_selection import train_test_split
-import streamlit as st
-import math
 
 # -----------------------------
-# 1. Simulated Data Ingestion
+# 1. Mock Data Fetching Functions (Replace with APIs if available)
 # -----------------------------
 
-def load_mock_data():
-    data = {
-        'store_id': ['A', 'A', 'A', 'B', 'B', 'B'],
-        'week': pd.date_range('2024-01-01', periods=3, freq='W').tolist() * 2,
-        'visits': [130, 145, 160, 200, 180, 210],
-        'avg_dwell_time': [8.2, 8.4, 9.0, 6.5, 6.8, 7.2],
-        'weather_score': [0.9, 0.8, 0.95, 0.85, 0.88, 0.9],
-        'social_sentiment': [0.6, 0.65, 0.7, 0.4, 0.45, 0.55],
-        'check_ins': [120, 140, 155, 180, 175, 205]
-    }
-    return pd.DataFrame(data)
+def fetch_satellite_image(store_coords):
+    return Image.open("sample_satellite.jpg")  # must include this sample in your repo
+
+def fetch_social_sentiment(store_name):
+    sentiment_score = np.random.uniform(0.3, 0.9)
+    return round(sentiment_score, 2)
+
+def fetch_foot_traffic(store_name):
+    visits = np.random.randint(100, 400)
+    dwell_time = round(np.random.uniform(5.0, 12.0), 1)
+    return visits, dwell_time
 
 # -----------------------------
-# 2. Feature Engineering
+# 2. Vision Model: Parking Lot Detection / People Density (Mocked)
 # -----------------------------
 
-def prepare_features(df):
-    df['week_num'] = df['week'].dt.isocalendar().week
-    df['month'] = df['week'].dt.month
-    df = pd.get_dummies(df, columns=['store_id'], drop_first=True)
-    X = df.drop(columns=['week', 'check_ins'])
-    y = df['check_ins']
-    return X, y
+def extract_cv_features(image):
+    percent_lot_filled = round(np.random.uniform(0.2, 0.95), 2)
+    people_detected = np.random.randint(0, 50)
+    return percent_lot_filled, people_detected
 
 # -----------------------------
-# 3. Model Training
+# 3. Load Sample Historical Dataset
 # -----------------------------
 
-def train_forecast_model(X, y):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-    model = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
+def load_training_data():
+    data = pd.read_csv("historical_store_features.csv")  # must include this CSV in your repo
+    return data
+
+# -----------------------------
+# 4. Train Model
+# -----------------------------
+
+def train_model(df):
+    X = df.drop(columns=["check_ins", "store_id"])
+    y = df["check_ins"]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    model = GradientBoostingRegressor()
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
     rmse = math.sqrt(mean_squared_error(y_test, y_pred))
-
     metrics = {
-        'MAE': round(mean_absolute_error(y_test, y_pred), 2),
-        'RMSE': round(rmse, 2),
-        'MAPE': round(mean_absolute_percentage_error(y_test, y_pred) * 100, 2)
+        "MAE": round(mean_absolute_error(y_test, y_pred), 2),
+        "RMSE": round(rmse, 2),
+        "MAPE": round(mean_absolute_percentage_error(y_test, y_pred) * 100, 2)
     }
     return model, metrics
 
 # -----------------------------
-# 4. Interactive User Input
+# 5. UI Input: Store Location and Name
 # -----------------------------
 
-def get_user_input():
-    st.sidebar.header("🧾 Input: Your Retail Location")
+def get_store_info():
+    st.sidebar.header("📍 Store Info")
+    store_name = st.sidebar.text_input("Store Name", value="Example Cafe")
+    lat = st.sidebar.number_input("Latitude", value=40.7128)
+    lon = st.sidebar.number_input("Longitude", value=-74.0060)
+    return store_name, (lat, lon)
 
-    store_name = st.sidebar.selectbox("Store ID", ["A", "B"])
-    visits = st.sidebar.slider("Weekly Foot Traffic", min_value=50, max_value=300, value=150)
-    dwell_time = st.sidebar.slider("Avg Dwell Time (minutes)", min_value=2.0, max_value=15.0, value=7.0)
-    weather_score = st.sidebar.slider("Weather Score", min_value=0.0, max_value=1.0, value=0.85)
-    sentiment = st.sidebar.slider("Social Media Sentiment", min_value=0.0, max_value=1.0, value=0.6)
+# -----------------------------
+# 6. Generate Recommendations
+# -----------------------------
 
-    today = datetime.date.today()
-    week_num = today.isocalendar()[1]
-    month = today.month
+def generate_recommendations(features):
+    suggestions = []
+    if features["social_sentiment"].iloc[0] < 0.5:
+        suggestions.append("⬆️ Increase online engagement with positive campaigns and influencer posts.")
+    if features["lot_fill"].iloc[0] < 0.5:
+        suggestions.append("🚗 Improve signage or parking availability to increase convenience.")
+    if features["avg_dwell_time"].iloc[0] < 6.0:
+        suggestions.append("☕ Add in-store attractions or promotions to increase customer stay time.")
+    if features["visits"].iloc[0] < 200:
+        suggestions.append("📣 Launch a local marketing push to boost foot traffic (flyers, loyalty apps).")
+    if not suggestions:
+        suggestions.append("✅ Store is performing well! Keep optimizing social and physical visibility.")
+    return suggestions
 
-    input_data = pd.DataFrame({
-        'visits': [visits],
-        'avg_dwell_time': [dwell_time],
-        'weather_score': [weather_score],
-        'social_sentiment': [sentiment],
-        'week_num': [week_num],
-        'month': [month],
-        'store_id_B': [1 if store_name == 'B' else 0]
+# -----------------------------
+# 7. Make Prediction
+# -----------------------------
+
+def forecast_checkins(model, store_coords, store_name):
+    image = fetch_satellite_image(store_coords)
+    percent_lot, num_people = extract_cv_features(image)
+    visits, dwell_time = fetch_foot_traffic(store_name)
+    sentiment = fetch_social_sentiment(store_name)
+
+    now = datetime.datetime.now()
+    week = now.isocalendar()[1]
+    month = now.month
+
+    features = pd.DataFrame({
+        "visits": [visits],
+        "avg_dwell_time": [dwell_time],
+        "weather_score": [0.85],
+        "social_sentiment": [sentiment],
+        "lot_fill": [percent_lot],
+        "visible_people": [num_people],
+        "week_num": [week],
+        "month": [month]
     })
-    return store_name, input_data
+
+    pred = model.predict(features)[0]
+    recs = generate_recommendations(features)
+    return int(pred), features, image, recs
 
 # -----------------------------
-# 5. Streamlit Frontend
+# 8. Streamlit Frontend
 # -----------------------------
 
-def dashboard(metrics, prediction, store_name):
-    st.set_page_config(page_title="Retail Forecast AI (Interactive)", layout="centered")
-    st.title("📈 Hyperlocal Retail Sales Forecasting - Interactive Edition")
+def render_dashboard(metrics, prediction, features, image, recs):
+    st.set_page_config(page_title="📊 AI Retail Forecaster", layout="wide")
+    st.title("🌐 AI-Powered Retail Forecasting System")
 
-    st.markdown("""
-    This AI tool predicts **next week's sales** (via check-ins) for your retail store using:
-    - Weekly foot traffic
-    - Dwell time
-    - Weather impact
-    - Social sentiment data
-    
-    Enter your own values in the sidebar!
-    """)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("🔮 Predicted Weekly Check-ins")
+        st.success(f"Expected Check-ins: {prediction}")
+        st.subheader("📊 Input Features")
+        st.dataframe(features)
+    with col2:
+        st.subheader("🛰️ Satellite View")
+        st.image(image, caption="Simulated Satellite Snapshot")
 
-    st.header("📊 Model Performance")
+    st.markdown("---")
+    st.subheader("📈 Model Performance")
     st.metric("MAE", metrics['MAE'])
     st.metric("RMSE", metrics['RMSE'])
     st.metric("MAPE", f"{metrics['MAPE']}%")
 
-    st.header(f"🔮 Forecasted Check-ins for Store {store_name}")
-    st.success(f"➡️ Expected Check-ins: {int(prediction)}")
+    st.markdown("---")
+    st.subheader("💡 Recommendations to Improve Performance")
+    for rec in recs:
+        st.info(rec)
 
-    st.caption("Built by Akhil Ramesh | Powered by GPT-4")
+    st.caption("Built by Akhil Ramesh | Streamlit + PyTorch + Geospatial Intelligence")
 
 # -----------------------------
-# 6. Main App Logic
+# 9. Main Logic
 # -----------------------------
 
 def main():
-    df = load_mock_data()
-    X, y = prepare_features(df)
-    model, metrics = train_forecast_model(X, y)
-
-    store_name, user_input = get_user_input()
-    prediction = model.predict(user_input)[0]
-    dashboard(metrics, prediction, store_name)
+    store_name, coords = get_store_info()
+    df = load_training_data()
+    model, metrics = train_model(df)
+    prediction, features, image, recs = forecast_checkins(model, coords, store_name)
+    render_dashboard(metrics, prediction, features, image, recs)
 
 if __name__ == '__main__':
     main()
