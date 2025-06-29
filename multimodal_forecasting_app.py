@@ -26,9 +26,24 @@ import requests
 from PIL import Image
 import io
 
+import requests
+from PIL import Image
+import io
+
 def fetch_satellite_image(coords):
     lat, lon = coords
-    url = f"https://your-satellite-image-api.com/getimage?lat={lat}&lon={lon}"  # your actual URL here
+
+    # Replace with your actual Google Maps API key
+    api_key = "YOUR_GOOGLE_MAPS_API_KEY"
+    zoom = 17  # You can adjust this (1 = world, 20 = building)
+    size = "600x600"  # Max size for free tier is 640x640
+    maptype = "satellite"
+
+    url = (
+        f"https://maps.googleapis.com/maps/api/staticmap?"
+        f"center={lat},{lon}&zoom={zoom}&size={size}&maptype={maptype}&key={api_key}"
+    )
+
     response = requests.get(url)
 
     if response.status_code != 200:
@@ -40,6 +55,7 @@ def fetch_satellite_image(coords):
 
     image = Image.open(io.BytesIO(response.content))
     return image
+
 
 def generate_recommendations(predicted_checkins):
     tips = []
