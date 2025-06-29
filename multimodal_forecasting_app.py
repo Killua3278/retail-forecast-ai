@@ -29,29 +29,28 @@ import io
 def fetch_satellite_image(coords):
     lat, lon = coords
 
-    # Replace with your actual Mapbox token (free tier available)
-    access_token = "YOUR_MAPBOX_ACCESS_TOKEN"
-    zoom = 17
-    width = 600
-    height = 600
-
-    url = (
-        f"https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/"
-        f"{lon},{lat},{zoom}/{width}x{height}?access_token={access_token}"
+    # NASA Earth imagery API (free and doesn't require billing)
+    nasa_api_key = "DEMO_KEY"  # You can get your own free key at https://api.nasa.gov
+    metadata_url = (
+        f"https://api.nasa.gov/planetary/earth/assets"
+        f"?lon={lon}&lat={lat}&dim=0.1&api_key={nasa_api_key}"
     )
 
-    response = requests.get(url)
+    meta_response = requests.get(metadata_url)
+    if meta_response.status_code != 200:
+        print("Metadata request failed:", meta_response.text)
+        raise Exception(f"Failed to fetch metadata: status code {meta_response.status_code}")
 
-    if response.status_code != 200:
-        print("URL used:", url)
-        print("Response content:", response.text[:200])
-        raise Exception(f"Failed to fetch image: status code {response.status_code}")
+    image_url = meta_response.json().get("url")
+    if not image_url:
+        raise Exception("No image URL found in NASA API response")
 
-    content_type = response.headers.get('Content-Type', '')
-    if not content_type.startswith('image'):
-        raise Exception(f"Unexpected content type: {content_type}")
+    image_response = requests.get(image_url)
+    if image_response.status_code != 200:
+        print("Image request failed:", image_response.text)
+        raise Exception(f"Failed to download image: status code {image_response.status_code}")
 
-    image = Image.open(io.BytesIO(response.content))
+    image = Image.open(io.BytesIO(image_response.content))
     return image
 
 
