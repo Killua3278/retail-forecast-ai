@@ -30,7 +30,7 @@ def fetch_satellite_image(coords):
     lat, lon = coords
 
     # NASA Earth imagery API (free and doesn't require billing)
-    nasa_api_key = R94OuSX31TsYywYbM2mTgQ4E4Op1WMfTLKbyrI53# You can get your own free key at https://api.nasa.gov
+    nasa_api_key = "R94OuSX31TsYywYbM2mTgQ4E4Op1WMfTLKbyrI53"  # ✅ correct You can get your own free key at https://api.nasa.gov
     metadata_url = (
         f"https://api.nasa.gov/planetary/earth/assets"
         f"?lon={lon}&lat={lat}&dim=0.1&api_key={nasa_api_key}"
