@@ -22,11 +22,22 @@ def train_forecast_model(X, y):
     rmse = round(mean_squared_error(y_test, y_pred, squared=False), 2)
     return model, {"RMSE": rmse}
 
-def fetch_satellite_image(store_coords):
-    lat, lon = store_coords
-    API_KEY = "YOUR_MAPBOX_API_KEY"  # Replace with your Mapbox API key
-    url = f"https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/{lon},{lat},18,0/500x500?access_token={API_KEY}"
+import requests
+from PIL import Image
+import io
+
+def fetch_satellite_image(coords):
+    lat, lon = coords
+    url = f"https://your-satellite-image-api.com/getimage?lat={lat}&lon={lon}"  # your actual URL here
     response = requests.get(url)
+
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch image: status code {response.status_code}")
+
+    content_type = response.headers.get('Content-Type', '')
+    if not content_type.startswith('image'):
+        raise Exception(f"Unexpected content type: {content_type}")
+
     image = Image.open(io.BytesIO(response.content))
     return image
 
