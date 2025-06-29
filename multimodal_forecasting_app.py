@@ -29,8 +29,8 @@ import io
 def fetch_satellite_image(coords):
     lat, lon = coords
 
-    # NASA Earth imagery API (free and doesn't require billing)
-    nasa_api_key = "R94OuSX31TsYywYbM2mTgQ4E4Op1WMfTLKbyrI53"  # ✅ correct You can get your own free key at https://api.nasa.gov
+    # NASA Earth imagery API key (replace with your own key)
+    nasa_api_key = "R94OuSX31TsYywYbM2mTgQ4E4Op1WMfTLKbyrI53"
     metadata_url = (
         f"https://api.nasa.gov/planetary/earth/assets"
         f"?lon={lon}&lat={lat}&dim=0.1&api_key={nasa_api_key}"
@@ -38,7 +38,8 @@ def fetch_satellite_image(coords):
 
     meta_response = requests.get(metadata_url)
     if meta_response.status_code != 200:
-        print("Metadata request failed:", meta_response.text)
+        print("Metadata request failed with content:")
+        print(meta_response.text)  # Debug output of API response
         raise Exception(f"Failed to fetch metadata: status code {meta_response.status_code}")
 
     image_url = meta_response.json().get("url")
@@ -47,7 +48,8 @@ def fetch_satellite_image(coords):
 
     image_response = requests.get(image_url)
     if image_response.status_code != 200:
-        print("Image request failed:", image_response.text)
+        print("Image request failed with content:")
+        print(image_response.text)  # Debug output of API response
         raise Exception(f"Failed to download image: status code {image_response.status_code}")
 
     image = Image.open(io.BytesIO(image_response.content))
